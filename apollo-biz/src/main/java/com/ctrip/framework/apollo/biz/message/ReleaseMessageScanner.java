@@ -43,13 +43,16 @@ public class ReleaseMessageScanner implements InitializingBean {
         .create("ReleaseMessageScanner", true));
   }
 
+  //实现了InitializingBean接口，该方法将会在bean创建并初始化后执行
   @Override
   public void afterPropertiesSet() throws Exception {
     databaseScanInterval = bizConfig.releaseMessageScanIntervalInMilli();
     maxIdScanned = loadLargestMessageId();
+    //创建定时任务，每 databaseScanInterval 秒执行一次
     executorService.scheduleWithFixedDelay(() -> {
       Transaction transaction = Tracer.newTransaction("Apollo.ReleaseMessageScanner", "scanMessage");
       try {
+        //扫描是否存在新的发布消息
         scanMessages();
         transaction.setStatus(Transaction.SUCCESS);
       } catch (Throwable ex) {
@@ -88,15 +91,19 @@ public class ReleaseMessageScanner implements InitializingBean {
    * @return whether there are more messages
    */
   private boolean scanAndSendMessages() {
-    //current batch is 500
+    //查询比maxIdScanned更大的发布消息，并按id升序排列
     List<ReleaseMessage> releaseMessages =
         releaseMessageRepository.findFirst500ByIdGreaterThanOrderByIdAsc(maxIdScanned);
+    //不存在新的发布消息即停止扫描
     if (CollectionUtils.isEmpty(releaseMessages)) {
       return false;
     }
+    //通知监听器处理新的发布信息
     fireMessageScanned(releaseMessages);
     int messageScanned = releaseMessages.size();
+    //maxIdScanned变为新发布消息中的最大id
     maxIdScanned = releaseMessages.get(messageScanned - 1).getId();
+    //是否还存在没扫描出的消息
     return messageScanned == 500;
   }
 

@@ -49,21 +49,21 @@ public class ApolloConfigDemo {
     };
     config = ConfigService.getAppConfig();
     config.addChangeListener(changeListener);
-    yamlConfig = ConfigService.getConfig("application.yaml");
-    yamlConfig.addChangeListener(changeListener);
+    //yamlConfig = ConfigService.getConfig("application.yaml");
+    //yamlConfig.addChangeListener(changeListener);
     publicConfig = ConfigService.getConfig("TEST1.apollo");
     publicConfig.addChangeListener(changeListener);
     applicationConfigFile = ConfigService.getConfigFile("application", ConfigFileFormat.Properties);
-    // datasources.xml
-    xmlConfigFile = ConfigService.getConfigFile("datasources", ConfigFileFormat.XML);
-    xmlConfigFile.addChangeListener(new ConfigFileChangeListener() {
-      @Override
-      public void onChange(ConfigFileChangeEvent changeEvent) {
-        logger.info(changeEvent.toString());
-      }
-    });
-    // application.yaml
-    yamlConfigFile = (YamlConfigFile) ConfigService.getConfigFile("application", ConfigFileFormat.YAML);
+    //// datasources.xml
+    //xmlConfigFile = ConfigService.getConfigFile("datasources", ConfigFileFormat.XML);
+    //xmlConfigFile.addChangeListener(new ConfigFileChangeListener() {
+    //  @Override
+    //  public void onChange(ConfigFileChangeEvent changeEvent) {
+    //    logger.info(changeEvent.toString());
+    //  }
+    //});
+    //// application.yaml
+    //yamlConfigFile = (YamlConfigFile) ConfigService.getConfigFile("application", ConfigFileFormat.YAML);
   }
 
   private String getConfig(String key) {
@@ -71,9 +71,9 @@ public class ApolloConfigDemo {
     if (DEFAULT_VALUE.equals(result)) {
       result = publicConfig.getProperty(key, DEFAULT_VALUE);
     }
-    if (DEFAULT_VALUE.equals(result)) {
-      result = yamlConfig.getProperty(key, DEFAULT_VALUE);
-    }
+    //if (DEFAULT_VALUE.equals(result)) {
+    //  result = yamlConfig.getProperty(key, DEFAULT_VALUE);
+    //}
     logger.info(String.format("Loading key : %s with value: %s", key, result));
     return result;
   }

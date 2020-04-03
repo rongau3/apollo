@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Service
 public class ReleaseMessageServiceWithCache implements ReleaseMessageListener, InitializingBean {
-  private static final Logger logger = LoggerFactory.getLogger(ReleaseMessageServiceWithCache
-      .class);
+  private static final Logger logger = LoggerFactory.getLogger(ReleaseMessageServiceWithCache.class);
   private final ReleaseMessageRepository releaseMessageRepository;
   private final BizConfig bizConfig;
 

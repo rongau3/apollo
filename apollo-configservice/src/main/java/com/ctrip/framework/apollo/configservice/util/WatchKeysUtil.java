@@ -50,8 +50,11 @@ public class WatchKeysUtil {
         assembleWatchKeys(appId, clusterName, namespaces, dataCenter);
 
     //Every app has an 'application' namespace
+    //判断是否只需要获取默认的命名空间：application
     if (!(namespaces.size() == 1 && namespaces.contains(ConfigConsts.NAMESPACE_APPLICATION))) {
+      //获取需要获取的App下的AppNamespace的名称
       Set<String> namespacesBelongToAppId = namespacesBelongToAppId(appId, namespaces);
+      //获取关联的AppNamespace名称
       Set<String> publicNamespaces = Sets.difference(namespaces, namespacesBelongToAppId);
 
       //Listen on more namespaces if it's a public namespace

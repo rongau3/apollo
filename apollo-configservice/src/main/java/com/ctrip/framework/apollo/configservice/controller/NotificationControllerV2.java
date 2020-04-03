@@ -55,8 +55,10 @@ import java.util.function.Function;
 @RequestMapping("/notifications/v2")
 public class NotificationControllerV2 implements ReleaseMessageListener {
   private static final Logger logger = LoggerFactory.getLogger(NotificationControllerV2.class);
+  //key：watchKey(ReleaseMessage中的message)，value：DeferredResultWrapper数组
   private final Multimap<String, DeferredResultWrapper> deferredResults =
       Multimaps.synchronizedSetMultimap(TreeMultimap.create(String.CASE_INSENSITIVE_ORDER, Ordering.natural()));
+  //字符串分割，去除其中可能出现空窜，如：a++b+c++d => ["a","b","c","d"]
   private static final Splitter STRING_SPLITTER =
       Splitter.on(ConfigConsts.CLUSTER_NAMESPACE_SEPARATOR).omitEmptyStrings();
   private static final Type notificationsTypeReference =
@@ -109,10 +111,13 @@ public class NotificationControllerV2 implements ReleaseMessageListener {
     if (CollectionUtils.isEmpty(notifications)) {
       throw new BadRequestException("Invalid format of notifications: " + notificationsAsString);
     }
-
+    //通过长轮询时间创建DeferredResultWrapper
     DeferredResultWrapper deferredResultWrapper = new DeferredResultWrapper(bizConfig.longPollingTimeoutInMilli());
+    //命名空间集合
     Set<String> namespaces = Sets.newHashSet();
+    //客户端通知Map，key=namespace，value=通知编号(ReleaseMessage的id)
     Map<String, Long> clientSideNotifications = Maps.newHashMap();
+    //过滤并创建ApolloConfigNotification Map
     Map<String, ApolloConfigNotification> filteredNotifications = filterNotifications(appId, notifications);
 
     for (Map.Entry<String, ApolloConfigNotification> notificationEntry : filteredNotifications.entrySet()) {
@@ -120,6 +125,7 @@ public class NotificationControllerV2 implements ReleaseMessageListener {
       ApolloConfigNotification notification = notificationEntry.getValue();
       namespaces.add(normalizedNamespace);
       clientSideNotifications.put(normalizedNamespace, notification.getNotificationId());
+      //若命名空间被归一化后不相同，则记录名字被归一化的 Namespace 。因为，最终返回给客户端，使用原始的 Namespace 名字，否则客户端无法识别
       if (!Objects.equals(notification.getNamespaceName(), normalizedNamespace)) {
         deferredResultWrapper.recordNamespaceNameNormalizedResult(notification.getNamespaceName(), normalizedNamespace);
       }
@@ -184,6 +190,13 @@ public class NotificationControllerV2 implements ReleaseMessageListener {
     return deferredResultWrapper.getResult();
   }
 
+  /**
+   * 筛选客户端传递的Namespace，处理Namespace名称不正确的问题，并将处理后的Namespace与ApolloConfigNotification组成Map
+   *
+   * @param appId
+   * @param notifications
+   * @return
+   */
   private Map<String, ApolloConfigNotification> filterNotifications(String appId,
                                                                     List<ApolloConfigNotification> notifications) {
     Map<String, ApolloConfigNotification> filteredNotifications = Maps.newHashMap();
@@ -192,8 +205,11 @@ public class NotificationControllerV2 implements ReleaseMessageListener {
         continue;
       }
       //strip out .properties suffix
+      //若NamespaceName以.properties为后缀则删除该后缀
       String originalNamespace = namespaceUtil.filterNamespaceName(notification.getNamespaceName());
       notification.setNamespaceName(originalNamespace);
+      //获得归一化的 Namespace 名字。因为，客户端 Namespace 会填写错大小写。
+      //例如，数据库中 Namespace 名为 Fx.Apollo ，而客户端 Namespace 名为 fx.Apollo，通过归一化后，统一为 Fx.Apollo
       //fix the character case issue, such as FX.apollo <-> fx.apollo
       String normalizedNamespace = namespaceUtil.normalizeNamespace(appId, originalNamespace);
 
