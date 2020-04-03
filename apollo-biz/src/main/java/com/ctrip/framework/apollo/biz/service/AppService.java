@@ -58,12 +58,14 @@ public class AppService {
 
   @Transactional
   public App save(App entity) {
+    //判断appId是否已存在
     if (!isAppIdUnique(entity.getAppId())) {
       throw new ServiceException("appId not unique");
     }
+    //防御性编程，避免App对象中存在id属性
     entity.setId(0);//protection
     App app = appRepository.save(entity);
-
+    //记录Audit到数据库中(实体对象更改记录)
     auditService.audit(App.class.getSimpleName(), app.getId(), Audit.OP.INSERT,
         app.getDataChangeCreatedBy());
 

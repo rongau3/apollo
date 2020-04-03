@@ -38,8 +38,10 @@ public class ClusterController {
     }
 
     if (autoCreatePrivateNamespace) {
+      //保存集群并复制所有的命名空间归于这个集群下
       entity = clusterService.saveWithInstanceOfAppNamespaces(entity);
     } else {
+      //仅保存集群
       entity = clusterService.saveWithoutInstanceOfAppNamespaces(entity);
     }
 

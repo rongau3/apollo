@@ -62,7 +62,7 @@ public class ItemController {
     model.setClusterName(clusterName);
     model.setEnv(env);
     model.setNamespaceName(namespaceName);
-
+    //根据文本批量更新配置
     configService.updateConfigItemByText(model);
   }
 

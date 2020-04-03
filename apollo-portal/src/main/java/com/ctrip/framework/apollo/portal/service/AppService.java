@@ -112,26 +112,27 @@ public class AppService {
   public App createAppInLocal(App app) {
     String appId = app.getAppId();
     App managedApp = appRepository.findByAppId(appId);
-
+    //判断App是否存在，存在则抛出BadRequestException异常
     if (managedApp != null) {
       throw new BadRequestException(String.format("App already exists. AppId = %s", appId));
     }
-
     UserInfo owner = userService.findByUserId(app.getOwnerName());
+    //判断App的拥有者是否存在，不存在则抛出BadRequestException异常
     if (owner == null) {
       throw new BadRequestException("Application's owner not exist.");
     }
     app.setOwnerEmail(owner.getEmail());
-
+    //设置创建人和最后修改人
     String operator = userInfoHolder.getUser().getUserId();
     app.setDataChangeCreatedBy(operator);
     app.setDataChangeLastModifiedBy(operator);
-
+    //保存App到数据库
     App createdApp = appRepository.save(app);
-
+    //创建App的默认AppNameSpace：application
     appNamespaceService.createDefaultAppNamespace(appId);
+    //初始化App角色
     roleInitializationService.initAppRoles(createdApp);
-
+    //记录日志
     Tracer.logEvent(TracerEventType.CREATE_APP, appId);
 
     return createdApp;

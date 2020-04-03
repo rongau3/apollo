@@ -121,6 +121,14 @@ public class NamespaceController {
     return namespaceService.findPublicNamespaceForAssociatedNamespace(Env.valueOf(env), appId, clusterName, namespaceName);
   }
 
+  /**
+   * 关联公共的命名空间实际上创建该集群下的一个Namespace，而不会创建AppName(公共的AppName唯一)
+   * 若通过关联的方式创建在同一App下的Namespace，则创建的Namespace会变成public而非关联，因为关联方式的判断是根据Namespace的AppId是否等于AppNamespace的AppId
+   *
+   * @param appId
+   * @param models
+   * @return
+   */
   @PreAuthorize(value = "@permissionValidator.hasCreateNamespacePermission(#appId)")
   @PostMapping("/apps/{appId}/namespaces")
   public ResponseEntity<Void> createNamespace(@PathVariable String appId,
@@ -196,7 +204,7 @@ public class NamespaceController {
       throw new BadRequestException(String.format("Invalid Namespace format: %s",
           InputValidator.INVALID_CLUSTER_NAMESPACE_MESSAGE + " & " + InputValidator.INVALID_NAMESPACE_NAMESPACE_MESSAGE));
     }
-
+    //保存AppNamespace到数据库中
     AppNamespace createdAppNamespace = appNamespaceService.createAppNamespaceInLocal(appNamespace, appendNamespacePrefix);
 
     if (portalConfig.canAppAdminCreatePrivateNamespace() || createdAppNamespace.isPublic()) {

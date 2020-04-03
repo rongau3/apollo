@@ -134,9 +134,8 @@ public class AppNamespaceService {
 
   public void createNamespaceForAppNamespaceInAllCluster(String appId, String namespaceName, String createBy) {
     List<Cluster> clusters = clusterService.findParentClusters(appId);
-
+    //为每一个集群创建该命名空间，并防止脏数据
     for (Cluster cluster : clusters) {
-
       // in case there is some dirty data, e.g. public namespace deleted in other app and now created in this app
       if (!namespaceService.isNamespaceUnique(appId, cluster.getName(), namespaceName)) {
         continue;

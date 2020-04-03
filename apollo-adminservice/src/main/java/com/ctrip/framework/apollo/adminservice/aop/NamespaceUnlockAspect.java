@@ -94,7 +94,7 @@ public class NamespaceUnlockAspect {
     if (bizConfig.isNamespaceLockSwitchOff()) {
       return;
     }
-
+    //配置项未修改则释放锁
     if (!isModified(namespace)) {
       namespaceLockService.unlock(namespace.getId());
     }
@@ -102,18 +102,21 @@ public class NamespaceUnlockAspect {
   }
 
   boolean isModified(Namespace namespace) {
+    //获取当前命名空间的最新发布的有效发布对象
     Release release = releaseService.findLatestActiveRelease(namespace);
+    //获取当前命名空间的所有配置项
     List<Item> items = itemService.findItemsWithoutOrdered(namespace.getId());
-
+    //判断发布对象是否存在，不存在则判断时侯有正常的配置项，若存在则修改过
     if (release == null) {
       return hasNormalItems(items);
     }
-
+    //获得Release的配置项的key-value
     Map<String, String> releasedConfiguration = gson.fromJson(release.getConfigurations(), GsonType.CONFIG);
+    //获取当前命名空间的所有配置项以及关联的命名空间的最新发布的有效发布对象的配置项的key-value
     Map<String, String> configurationFromItems = generateConfigurationFromItems(namespace, items);
-
+    //构建对比Map对象
     MapDifference<String, String> difference = Maps.difference(releasedConfiguration, configurationFromItems);
-
+    //判断是否全部相等，不相等则修改过
     return !difference.areEqual();
 
   }
@@ -131,7 +134,7 @@ public class NamespaceUnlockAspect {
   private Map<String, String> generateConfigurationFromItems(Namespace namespace, List<Item> namespaceItems) {
 
     Map<String, String> configurationFromItems = Maps.newHashMap();
-
+    //获取父命名空间
     Namespace parentNamespace = namespaceService.findParentNamespace(namespace);
     //parent namespace
     if (parentNamespace == null) {
@@ -150,6 +153,7 @@ public class NamespaceUnlockAspect {
   private Map<String, String> generateMapFromItems(List<Item> items, Map<String, String> configurationFromItems) {
     for (Item item : items) {
       String key = item.getKey();
+      //跳过注释和空行，因为注释和空行都为空窜
       if (StringUtils.isBlank(key)) {
         continue;
       }

@@ -72,7 +72,7 @@ public class ItemService {
     Env env = model.getEnv();
     String clusterName = model.getClusterName();
     String namespaceName = model.getNamespaceName();
-
+    //获取NameSpace
     NamespaceDTO namespace = namespaceAPI.loadNamespace(appId, env, clusterName, namespaceName);
     if (namespace == null) {
       throw new BadRequestException(
@@ -82,16 +82,19 @@ public class ItemService {
 
     String configText = model.getConfigText();
 
+    //根据配置文件类型创建配置文本解析器
     ConfigTextResolver resolver =
         model.getFormat() == ConfigFileFormat.Properties ? propertyResolver : fileTextResolver;
 
+    //通过解析器获取所有需要更新、创建和删除的配置项
     ItemChangeSets changeSets = resolver.resolve(namespaceId, configText,
         itemAPI.findItems(appId, env, clusterName, namespaceName));
     if (changeSets.isEmpty()) {
       return;
     }
-
+    //配置更改集合对象中设置更新者，以便adminService获取更新者
     changeSets.setDataChangeLastModifiedBy(userInfoHolder.getUser().getUserId());
+    //调用接口传递配置更改集合对象
     updateItems(appId, env, clusterName, namespaceName, changeSets);
 
     Tracer.logEvent(TracerEventType.MODIFY_NAMESPACE_BY_TEXT,

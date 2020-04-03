@@ -28,9 +28,13 @@ public class ReleaseMessageScanner implements InitializingBean {
   private BizConfig bizConfig;
   @Autowired
   private ReleaseMessageRepository releaseMessageRepository;
+  //数据库扫描ReleaseMessage表的频率
   private int databaseScanInterval;
+  //监听数组
   private List<ReleaseMessageListener> listeners;
+  //定时任务
   private ScheduledExecutorService executorService;
+  //最后扫描到的 ReleaseMessage 的编号
   private long maxIdScanned;
 
   public ReleaseMessageScanner() {
@@ -43,7 +47,7 @@ public class ReleaseMessageScanner implements InitializingBean {
   public void afterPropertiesSet() throws Exception {
     databaseScanInterval = bizConfig.releaseMessageScanIntervalInMilli();
     maxIdScanned = loadLargestMessageId();
-    executorService.scheduleWithFixedDelay((Runnable) () -> {
+    executorService.scheduleWithFixedDelay(() -> {
       Transaction transaction = Tracer.newTransaction("Apollo.ReleaseMessageScanner", "scanMessage");
       try {
         scanMessages();

@@ -109,11 +109,14 @@ public class NamespaceAcquireLockAspect {
     NamespaceLock namespaceLock = namespaceLockService.findLock(namespaceId);
     if (namespaceLock == null) {
       try {
+        //尝试加锁，即保存lock的信息
         tryLock(namespaceId, currentUser);
         //lock success
       } catch (DataIntegrityViolationException e) {
         //lock fail
+        //加锁失败（namespaceId唯一索引冲突，即存在锁）
         namespaceLock = namespaceLockService.findLock(namespaceId);
+        //检查该锁的持有者是否为当前用户
         checkLock(namespace, namespaceLock, currentUser);
       } catch (Exception e) {
         logger.error("try lock error", e);

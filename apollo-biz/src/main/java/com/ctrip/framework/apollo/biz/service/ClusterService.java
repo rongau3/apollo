@@ -64,9 +64,9 @@ public class ClusterService {
 
   @Transactional
   public Cluster saveWithInstanceOfAppNamespaces(Cluster entity) {
-
+    //保存集群到数据库
     Cluster savedCluster = saveWithoutInstanceOfAppNamespaces(entity);
-
+    //复制App下的所有命名空间到新集群中
     namespaceService.instanceOfAppNamespaces(savedCluster.getAppId(), savedCluster.getName(),
                                              savedCluster.getDataChangeCreatedBy());
 

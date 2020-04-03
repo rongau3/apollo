@@ -38,11 +38,11 @@ public class AdminService {
     App createdApp = appService.save(app);
 
     String appId = createdApp.getAppId();
-
+    //创建默认的命名空间：application
     appNamespaceService.createDefaultAppNamespace(appId, createBy);
-
+    //创建默认的集群：default
     clusterService.createDefaultCluster(appId, createBy);
-
+    //根据App的命名空间为默认集群创建集群的命名空间，实际上可看成1:0~1,因为同一App的不同集群可删除集群下的命名空间，在只有一个默认集群的情况下是1:1
     namespaceService.instanceOfAppNamespaces(appId, ConfigConsts.CLUSTER_NAME_DEFAULT, createBy);
 
     return app;
